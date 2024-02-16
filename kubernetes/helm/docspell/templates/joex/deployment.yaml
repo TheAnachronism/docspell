@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "docspell.fullname" . }}-joex
+  annotations:
+  {{- if .Values.joex.deployment.annotations }}
+  {{- toYaml .Values.joex.deployment.annotations | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "joex.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.joex.replicaCount }}
+  strategy:
+    type: {{ .Values.joex.strategy.type }}
+    {{- if eq .Values.joex.strategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.joex.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.joex.strategy.rollingUpdate.maxSurge }}
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "joex.selectorLabels" . | nindent 6 }}
+      {{- if .Values.joex.deployment.labels }}
+      {{- toYaml .Values.joex.deployment.labels | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/joex/config.yaml") . | sha256sum }}
+        {{- with .Values.joex.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "joex.labels" . | nindent 8 }}
+        {{- if .Values.joex.deployment.labels }}
+        {{- toYaml .Values.joex.deployment.labels | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if or .Values.serviceAccount.create .Values.serviceAccount.name }}
+      serviceAccountName: {{ include "docspell.serviceAccountName" . }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.joex.deployment.terminationGracePeriodSeconds }}
+      containers:
+        - name: joex
+          image: "{{ include "joex.image" . }}"
+          imagePullPolicy: {{ .Values.joex.image.pullPolicy }}
+          {{- with .Values.joex.additionalArgs }}
+          args:
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+          ports:
+          - containerPort: {{ .Values.joex.service.port }}
+            name: http
+          envFrom:
+          - configMapRef:
+              name: {{ include "docspell.fullname" . }}-joex
+          - secretRef:
+              name: {{ include "docspell.fullname" . }}-joex-secret
+          resources:
+            {{- toYaml .Values.joex.resources | nindent 12 }}

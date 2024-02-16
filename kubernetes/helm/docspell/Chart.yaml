@@ -1,0 +1,19 @@
+apiVersion: v2
+name: docspell
+description: Chart for eikek's Docspell document management system
+icon: https://raw.githubusercontent.com/eikek/docspell/master/artwork/logo-only.svg
+
+version: 0.0.1
+appVersion: v0.41.0
+
+sources:
+  - "https://github.com/eikek/docspell/"
+
+maintainers:
+  - name: TheAnachronism
+
+dependencies:
+  - name: postgresql
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 14.0.5
+    condition: postgresql.enabled

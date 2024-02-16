@@ -1,0 +1,22 @@
+{{- if .Values.solr.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "docspell.fullname" . }}-solr
+  labels:
+    {{- include "solr.labels" . | nindent 4 }}
+    {{- if .Values.solr.service.labels }}
+    {{- toYaml .Values.solr.serivce.labels | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.solr.service.annotations | nindent 4 }}
+spec:
+  type: {{ .Values.solr.service.type }}
+  ports:
+  - port: {{ .Values.solr.service.port }}
+    targetPort: {{ .Values.solr.service.targetPort | default .Values.solr.service.port }}
+    protocol: TCP
+    name: solr
+  selector:
+    {{- include "solr.selectorLabels" . | nindent 4 }}
+{{- end -}}

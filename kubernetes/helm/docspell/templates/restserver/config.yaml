@@ -1,0 +1,27 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "docspell.fullname" . }}-restserver
+  labels:
+    {{- include "restserver.labels" . | nindent 4 }}
+data:
+    DOCSPELL_SERVER_APP__NAME: {{ .Values.docspell.server.appName }}
+    DOCSPELL_SERVER_APP__ID: {{ include "docspell.server.config.appId" . }}
+    DOCSPELL_SERVER_INTERNAL__URL: http://{{ include "docspell.fullname" . }}-restserver:{{ .Values.restserver.service.port }}
+    {{- include "docspell.server.config.logging" . | nindent 4 }}
+    {{- include "docspell.server.config.bind" . |nindent 4 }}
+    DOCSPELL_SERVER_MAX__ITEM__PAGE__SIZE: {{ .Values.docspell.server.maxItemPageSize | quote }}
+    DOCSPELL_SERVER_MAX__NOTE_LENGTH: {{ .Values.docspell.server.maxNoteLength | quote }}
+    DOCSPELL_SERVER_SHOW__CLASSIFICATION__SETTINGS: {{ .Values.docspell.server.showClassificationSettings | quote }}
+    {{- include "docspell.server.config.auth" . | nindent 4 }}
+    {{- include "docspell.server.config.donwload" . | nindent 4 }}
+    {{- include "docspell.server.config.openid" . | nindent 4 }}
+    {{- if .Values.docspell.server.integrationEndpoint.enabled -}}
+    {{- include "docspell.server.config.integrationEndpoint" . | nindent 4 }}
+    {{- end }}
+    {{- if .Values.docspell.fullTextSearch.enabled -}}
+    {{ include "docspell.config.fullTextSearch" (dict "context" . "type" "server") | nindent 4 }}
+    {{- end }}
+    DOCSPELL_SERVER_BACKEND_MAIL__DEBUG: {{ .Values.docspell.server.backend.mailDebug | quote }}
+    {{- include "docspell.server.config.databaseSchema" . | nindent 4 }}
+    {{- include "docspell.server.config.signup" . | nindent 4 }}

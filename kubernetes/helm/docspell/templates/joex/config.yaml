@@ -1,0 +1,23 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "docspell.fullname" . }}-joex
+  labels:
+    {{- include "joex.labels" . | nindent 4 }}
+data:
+    DOCSPELL_JOEX_APP__ID: {{ include "docspell.joex.config.appId" . }}
+    DOCSPELL_JOEX_BASE__URL: {{ include "docspell.joex.config.baseUrl" . }}
+    {{- include "docspell.joex.config.bind" . | nindent 4 }}
+    {{- include "docspell.joex.config.logging" . | nindent 4 }}
+    DOCSPELL_JOEX_MAIL__DEBUG: {{ .Values.docspell.joex.mailDebug | quote }}
+    {{- include "docspell.joex.config.databaseSchema" . | nindent 4 }}
+    {{- include "docspell.joex.config.scheduler" . | nindent 4 }}
+    {{- include "docspell.joex.config.periodicScheduler" . | nindent 4 }}
+    {{- include "docspell.joex.config.userTasks" . | nindent 4 }}
+    {{- include "docspell.joex.config.houseKeeping" . | nindent 4 }}
+    {{- include "docspell.joex.config.updateCheck" . | nindent 4 }}
+    {{- include "docspell.joex.config.convert" . | nindent 4 }}
+    {{- if .Values.docspell.fullTextSearch.enabled -}}
+    {{- include "docspell.config.fullTextSearch" (dict "context" . "type" "joex") | nindent 4 }}
+    {{- include "docspell.joex.config.fullTextSearch" . | nindent 4}}
+    {{- end }}

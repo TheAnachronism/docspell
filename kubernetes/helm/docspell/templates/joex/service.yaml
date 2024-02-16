@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "docspell.fullname" . }}-joex
+  labels:
+    {{- include "joex.labels" . | nindent 4 }}
+    {{- if .Values.joex.service.labels }}
+    {{- toYaml .Values.joex.serivce.labels | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.joex.service.annotations | nindent 4 }}
+spec:
+  type: {{ .Values.joex.service.type }}
+  ports:
+  - port: {{ .Values.joex.service.port }}
+    targetPort: {{ .Values.joex.service.targetPort | default .Values.joex.service.port }}
+    protocol: TCP
+    name: http
+  selector:
+    {{- include "joex.selectorLabels" . | nindent 6 -}}

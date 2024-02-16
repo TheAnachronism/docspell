@@ -1,0 +1,21 @@
+{{- if and .Values.solr.enabled .Values.solr.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.solr.persistence.claimName }}
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+{{ .Values.solr.persistence.annotations | toYaml | indent 4}}
+spec:
+  accessModes:
+  {{- .Values.solr.persistence.accessModes | toYaml | nindent 4 }}
+  volumeMode: Filesystem
+  {{- include "solr.persistence.storageClass" . | nindent 2 }}
+  {{- with .Values.solr.persistence.volumeName }}
+  volumeName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.solr.persistence.size }}
+{{- end }}
+

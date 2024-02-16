@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "docspell.fullname" . }}-restserver
+  annotations:
+  {{- if .Values.restserver.deployment.annotations }}
+  {{- toYaml .Values.restserver.deployment.annotations | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "restserver.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.restserver.replicaCount }}
+  strategy:
+    type: {{ .Values.restserver.strategy.type }}
+    {{- if eq .Values.restserver.strategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.restserver.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.restserver.strategy.rollingUpdate.maxSurge }}
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "restserver.selectorLabels" . | nindent 6 }}
+      {{- if .Values.restserver.deployment.labels }}
+      {{- toYaml .Values.restserver.deployment.labels | nindent 6 }}
+      {{- end }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/restserver/config.yaml") . | sha256sum }}
+        {{- with .Values.restserver.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "restserver.labels" . | nindent 8 }}
+        {{- if .Values.restserver.deployment.labels }}
+        {{- toYaml .Values.restserver.deployment.labels | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if (or .Values.serviceAccount.create .Values.serviceAccount.name) }}
+      serviceAccountName: {{ include "docspell.serviceAccountName" . }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.restserver.deployment.terminationGracePeriodSeconds }}
+      containers:
+        - name: restserver
+          image: "{{ include "restserver.image" . }}"
+          imagePullPolicy: {{ .Values.restserver.image.pullPolicy }}
+          ports:
+          - containerPort: {{ .Values.restserver.service.port }}
+            name: http
+          envFrom:
+          - configMapRef:
+              name: {{ include "docspell.fullname" . }}-restserver
+          - secretRef:
+              name: {{ include "docspell.fullname" . }}-restserver-secret
+          resources:
+            {{- toYaml .Values.restserver.resources | nindent 12 }}

@@ -1,0 +1,43 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullname := include "docspell.fullname" . -}}
+{{- $context := . -}}
+apiVersion: {{ default "networking.k8s.io/v1" .Values.ingress.apiVersion }}
+kind: Ingress
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "docspell.labels" . | nindent 4 }}
+  annotations:
+    {{- range $key, $value := .Values.ingress.annotations }}
+      {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+{{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+{{- end }}
+{{- if .Values.ingress.tls }}
+  tls:
+  {{- range .Values.ingress.tls }}
+  - host:
+    {{- range .hosts }}
+      - {{ tpl . $ | quote }}
+    {{- end }}
+    secretName: {{ .secretName }}
+  {{- end }}
+{{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ tpl .host $ | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "docspell.fullname" $context }}-restserver
+                port:
+                  name: http
+          {{- end }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "docspell.fullname" . }}-restserver
+  labels:
+    {{- include "restserver.labels" . | nindent 4 }}
+    {{- if .Values.restserver.service.labels }}
+    {{- toYaml .Values.restserver.serivce.labels | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.restserver.service.annotations | nindent 4 }}
+spec:
+  type: {{ .Values.restserver.service.type }}
+  ports:
+  - port: {{ .Values.restserver.service.port }}
+    targetPort: {{ .Values.restserver.service.targetPort | default .Values.restserver.service.port }}
+    protocol: TCP
+    name: http
+  selector:
+    {{- include "restserver.selectorLabels" . | nindent 6 -}}

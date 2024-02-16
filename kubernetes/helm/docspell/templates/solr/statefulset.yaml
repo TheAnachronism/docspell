@@ -1,0 +1,98 @@
+{{- if .Values.solr.enabled -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "docspell.fullname" . }}-solr
+  annotations:
+  {{- if .Values.solr.statefulSet.annotations }}
+  {{- toYaml .Values.solr.statefulSet.annotations | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "solr.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "solr.selectorLabels" . | nindent 6 }}
+      {{- if .Values.solr.statefulSet.labels }}
+      {{- toYaml .Values.solr.statefulSet.labels | nindent 6 }}
+      {{- end }}
+  serviceName: {{ include "docspell.fullname" . }}-solr
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.solr.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "solr.labels" . | nindent 8 }}
+        {{- if .Values.solr.statefulSet.labels }}
+        {{- toYaml .Values.solr.statefulSet.labels | nindent 8 }}
+        {{- end }}
+        app: solr
+    spec:
+      {{- if (or .Values.serviceAccount.create .Values.serviceAccount.name) }}
+      serviceAccontName: {{ include "docspell.serviceAccountName" . }}
+      {{- end }}
+      initContainers:
+        - name: solr-fix-permissions
+          image: busybox
+          command:
+            - sh
+            - -c
+            - chown -R 8983:8983 /var/solr
+          volumeMounts:
+            - name: solr-data
+              mountPath: /var/solr
+          resources:
+            {{- toYaml .Values.solr.initContainers.resources | nindent 12 }}
+      terminationGracePeriodSeconds: {{ .Values.solr.statefulSet.terminationGracePeriodSeconds }}
+      containers:
+      - name: solr
+        image: "{{ include "solr.image" . }}"
+        imagePullPolicy: {{ .Values.solr.image.pullPolicy }}
+        env:
+          - name: SOLR_OPTS
+            value: -Dsolr.modules=analysis-extras
+        command:
+        - docker-entrypoint.sh
+        - solr-precreate
+        - docspell
+        ports:
+        - containerPort: {{ .Values.solr.service.port }}
+          name: solr
+        {{- if .Values.solr.livenessProbe.enabled }}
+        livenessProbe:
+          {{- toYaml (omit .Values.solr.livenessProbe "enabled") | nindent 10 }}
+        {{- end }}
+        {{- if .Values.solr.readinessProbe.enabled }}
+        readinessProbe:
+          {{- toYaml (omit .Values.solr.readinessProbe "enabled") | nindent 10 }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.solr.resources | nindent 10 }}
+        volumeMounts:
+        - name: solr-data
+          mountPath: /var/solr
+      {{- with .Values.global.hostAliases }}
+      hostAliases:
+      {{- toYaml . | nindent 6 }}
+      {{- with .Values.solr.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- with .Values.solr.affinity }}
+      affinity:
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- end }}
+      volumes:
+      {{- if .Values.solr.persistence.enabled }}
+      - name: solr-data
+        persistentVolumeClaim:
+          claimName: {{ .Values.solr.persistence.claimName }}
+      {{- else if not .Values.solr.persistence.enabled }}
+      - name: solr-data
+        emptyDir: {}
+      {{- end }}
+{{- end -}}
