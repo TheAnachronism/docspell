@@ -1,6 +1,4 @@
-{{/*
-Expand the name of the chart.
-*/}}
+{{/*Expand the name of the chart.*/}}
 {{- define "docspell.name" -}}
 {{- .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
@@ -19,16 +17,12 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 {{- end }}
 
-{{/*
-Create chart name and version as used by the chart label.
-*/}}
+{{/*Create chart name and version as used by the chart label.*/}}
 {{- define "docspell.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{/*
-Docker Image Registry Secret Names evaluating values as templates
-*/}}
+{{/*Docker Image Registry Secret Names evaluating values as templates*/}}
 {{- define "docspell.images.pullSecrets" -}}
 {{- $pullSecrets := .Values.global.imagePullSecrets -}}
 {{- range .Values.global.imagePullSecrets -}}
@@ -40,9 +34,7 @@ imagePullSecrets:
 {{- end -}}
 {{- end -}}
 
-{{/*
-Common labels
-*/}}
+{{/*Common labels*/}}
 {{- define "docspell.labels" -}}
 helm.sh/chart: {{ include "docspell.chart" . }}
 {{ include "docspell.selectorLabels" . }}
@@ -52,29 +44,13 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{/*
-Selector labels
-*/}}
+{{/*Selector labels*/}}
 {{- define "docspell.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "docspell.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-{{/*
-Postgres Access
-*/}}
-
-{{- define "postgresql.jdbcUrl" -}}
-{{- if (index .Values "postgresql").enabled -}}
-{{- $port := .Values.postgresql.global.postgresql.service.postgresql | toString -}}
-{{- $database := .Values.postgresql.global.postgresql.auth.database -}}
-{{- printf "jdbc:postgresql://%s-postgresql:%s/%s" .Release.Name $port $database -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Create the name of the service account to use
-*/}}
+{{/*Create the name of the service account to use*/}}
 {{- define "docspell.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
 {{- default (include "docspell.fullname" .) .Values.serviceAccount.name }}

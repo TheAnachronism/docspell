@@ -1,6 +1,4 @@
-{{/*
-Common labels
-*/}}
+{{/*Common labels*/}}
 {{- define "joex.labels" -}}
 helm.sh/chart: {{ include "docspell.chart" . }}
 app: {{ include "docspell.name" . }}-joex
@@ -10,17 +8,13 @@ version: {{ .Values.joex.image.tag | default .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{/*
-Selector labels
-*/}}
+{{/*Selector labels*/}}
 {{- define "joex.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "docspell.name" . }}-joex
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-{{/*
-Create joex image name and tag used by the deployment
-*/}}
+{{/*Create joex image name and tag used by the deployment*/}}
 {{- define "joex.image" -}}
 {{- $registry := .Values.global.imageRegistry | default .Values.joex.image.registry -}}
 {{- $repository := .Values.joex.image.repository -}}

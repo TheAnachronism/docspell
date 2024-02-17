@@ -1,3 +1,12 @@
+{{/*Postgres Access*/}}
+{{- define "postgresql.jdbcUrl" -}}
+{{- if (index .Values "postgresql").enabled -}}
+{{- $port := .Values.postgresql.global.postgresql.service.postgresql | toString -}}
+{{- $database := .Values.postgresql.global.postgresql.auth.database -}}
+{{- printf "jdbc:postgresql://%s-postgresql:%s/%s" .Release.Name $port $database -}}
+{{- end -}}
+{{- end -}}
+
 {{/*JDBC Connection*/}}
 {{- define "docspell.secrets.JDBC" -}}
 {{- if .context.Values.postgresql.enabled -}}
