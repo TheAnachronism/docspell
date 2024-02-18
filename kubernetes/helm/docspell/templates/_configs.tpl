@@ -15,7 +15,9 @@
 {{- $envPrefix = "DOCSPELL_JOEX_JDBC" -}}
 {{- end }}
 {{ $envPrefix }}_USER: {{ .context.Values.postgresql.global.postgresql.auth.username }}
+{{- if not .context.Values.postgresql.global.postgresql.auth.existingSecret }}
 {{ $envPrefix }}_PASSWORD: {{ .context.Values.postgresql.global.postgresql.auth.password }}
+{{- end }}
 {{ $envPrefix }}_URL: {{ include "postgresql.jdbcUrl" .context }}
 {{- end -}}
 {{- end -}}

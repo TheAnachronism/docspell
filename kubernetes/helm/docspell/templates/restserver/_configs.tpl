@@ -32,9 +32,14 @@
 
 {{/*Auth Secrets*/}}
 {{- define "docspell.server.secrets.auth" -}}
-{{- with .Values.docspell.server.auth.serverSecret }}
+{{- if .Values.docspell.server.auth.serverSecret -}}
+{{- if and .Values.docspell.server.auth.serverSecret.value .Values.docspell.server.auth.serverSecret.existingSecret -}}
+{{- fail "Only either a fixed server secret or an existing secret should be specified" -}}
+{{- end -}}
+{{- with .Values.docspell.server.auth.serverSecret.value }}
 DOCSPELL_SERVER_AUTH_SERVER__SECRET: {{ . }}
-{{- end }}
+{{- end -}}
+{{- end -}}
 {{- end -}}
 
 {{/*Download Config*/}}
@@ -71,7 +76,7 @@ DOCSPELL_SERVER_AUTH_SERVER__SECRET: {{ . }}
 {{- define "docspell.server.secrets.openid" -}}
 {{- $envPrefix := "DOCSPELL_SERVER_OPENID" -}}
 {{- range $index, $entry := .Values.docspell.server.openid -}}
-{{- if $entry.enabled -}}
+{{- if and $entry.enabled (not $entry.provider.existingSecret) -}}
 {{- $envPrefix = printf "%s_%s_PROVIDER" $envPrefix ($index | toString) }}
 {{ $envPrefix }}_CLIENT__ID: {{ $entry.provider.clientId }}
 {{ $envPrefix }}_CLIENT__SECRET: {{ $entry.provider.clientSecret }}
@@ -110,24 +115,40 @@ DOCSPELL_SERVER_AUTH_SERVER__SECRET: {{ . }}
 
 {{/*Integration Endpoint Secrets*/}}
 {{- define "docspell.server.secrets.integrationEndpoint" -}}
-{{- if .Values.docspell.server.integrationEndpoint.httpBasic.enabled | quote -}}
-{{- $envPrefix := "DOCSPELL_SERVER_INTEGRATION__ENDPOINT__HTTP__BASIC" -}}
+{{- if .Values.docspell.server.integrationEndpoint.httpBasic.enabled -}}
+{{- if and .Values.docspell.server.integrationEndpoint.httpBasic.credentials .Values.docspell.server.integrationEndpoint.httpBasic.existingSecret -}}
+{{- fail "Only either the fixed credentials or an existing secret for the httpBasic integration endpoint should be set" -}}
+{{- end -}}
+{{- $envPrefix := "DOCSPELL_SERVER_INTEGRATION__ENDPOINT_HTTP__BASIC" -}}
 {{ $envPrefix}}_REALM: {{ .Values.docspell.server.integrationEndpoint.httpBasic.realm }}
-{{ $envPrefix}}_USER: {{ .Values.docspell.server.integrationEndpoint.httpBasic.user }}
-{{ $envPrefix}}_PASSWORD: {{ .Values.docspell.server.integrationEndpoint.httpBasic.password }}
+{{- with .Values.docspell.server.integrationEndpoint.httpBasic.credentials }}
+{{ $envPrefix}}_USER: {{ .username }}
+{{ $envPrefix}}_PASSWORD: {{ .password }}
+{{- end -}}
 {{- end }}
-{{- if .Values.docspell.server.integrationEndpoint.httpHeader.enabled | quote -}}
-{{ $envPrefix := "DOCSPELL_SERVER_INTEGRATION__ENDPOINT__HTTP__HEADER" }}
+{{- if .Values.docspell.server.integrationEndpoint.httpHeader.enabled -}}
+{{- if and .Values.docspell.server.integrationEndpoint.httpHeader.headerValue.value .Values.docspell.server.integrationEndpoint.httpHeader.headerValue.existingSecret -}}
+{{- fail "Only either the fixed header value or an existing secret for the http header ingration endpoint should be set" -}}
+{{- end -}}
+{{ $envPrefix := "DOCSPELL_SERVER_INTEGRATION__ENDPOINT_HTTP__HEADER" }}
 {{ $envPrefix }}_HEADER__NAME: {{ .Values.docspell.server.integrationEndpoint.httpHeader.headerName }}
-{{ $envPrefix }}_HEADER__VALUE: {{ .Values.docspell.server.integrationEndpoint.httpHeader.headerValue }}
+{{- with .Values.docspell.server.integrationEndpoint.httpHeader.headerValue.value -}}
+{{ $envPrefix }}_HEADER__VALUE: {{ .Values.docspell.server.integrationEndpoint.httpHeader.headerValue.value }}
+{{- end -}}
 {{- end }}
 {{- end -}}
 
 {{/*Admin Endpoint Secrets*/}}
 {{- define "docspell.server.secrets.adminEndpoint" -}}
-{{- with .Values.docspell.server.adminEndpoint.secret }}
-DOCSPELL_SERVER_ADMIN__ENDPOINT_SECRET: {{ . }}
-{{- end }}
+{{- if .Values.docspell.server.adminEndpoint.enabled -}}
+{{- $context := . -}}
+{{- with .Values.docspell.server.adminEndpoint.secret -}}
+{{- if $context.Values.docspell.server.adminEndpoint.existingSecret }}
+{{- fail "Only either the fixed value or an existing secret for the admin endpoint should be set" -}}
+{{- end -}}
+DOCSPELL_SERVER_ADMIN__ENDPOINT_SECRET: {{ .value }}
+{{- end -}}
+{{- end -}}
 {{- end -}}
 
 {{/*Signup Settings*/}}
@@ -142,6 +163,12 @@ DOCSPELL_SERVER_ADMIN__ENDPOINT_SECRET: {{ . }}
 {{/*Signup Secrets*/}}
 {{- define "docspell.server.secrets.signup" -}}
 {{- if eq .Values.docspell.server.backend.signup.mode "invite" }}
-DOCSPELL_SERVER_BACKEND_SIGNUP_NEW__INVITE__PASSWORD: {{ .Values.docspell.server.backend.signup.newInvitePassword }}
+{{- $context := . -}}
+{{- with .Values.docspell.server.backend.signup.newInvitePassword.value -}}
+{{- if $context.Values.docspell.server.backend.signup.newInvitePassword.existingSecret -}}
+{{- fail "Only either the fixed value or an existing secret for the new invite password should be set" -}}
+{{- end -}}
+DOCSPELL_SERVER_BACKEND_SIGNUP_NEW__INVITE__PASSWORD: {{ . }}
+{{- end -}}
 {{- end -}}
 {{- end -}}

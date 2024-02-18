@@ -60,13 +60,19 @@ docspell:
     bind:
       address: 0.0.0.0
       port: 7880
-    ## @param docspell.server.auth.serverSecret Secret to sign the authenticator tokens. If empty, one will be generated
+    ## @param docspell.server.auth.serverSecret.value Secret to sign the authenticator tokens. If empty, one will be generated
+    ## @param docspell.server.auth.serverSecret.existingSecret.name The name of an existing Kubernetes secret that contains the server secret
+    ## @param docspell.server.auth.serverSecret.existingSecret.key The key inside the existing Kubernetes secret that contains the server secret
     ## @param docspell.server.auth.sessionValid How long an authentication token is valid
     ## @param docspell.server.auth.onAccountSourceConflict Fail if a duplicate account from an external source should fail the login. Can be: fail, convert    
     ## @param docspell.server.auth.rememberMe.enabled Enable/disable the remember me function
     ## @param docspell.server.auth.rememberMe.valid How long the remember me cookie/token is valid
     auth:
-      serverSecret: b64:YRx77QujCGkHSvll0TVEmtTaw3Z5eXr+nWMsEJowgKg=
+      serverSecret: 
+        # value: asdf
+        # existingSecret:
+        #   name: "my-existing-secret"
+        #   key: "key-inside-secret"
       sessionValid: "5 minutes"
       onAccountSourceConflict: fail
       rememberMe:
@@ -85,14 +91,19 @@ docspell:
           providerId: keycloak
           clientId: docspell
           clientSecret: example-secret-439e-bf06-911e4cdd56a6
-          scope: profile
           authorizeUrl: http://localhost:8080/auth/realms/home/protocol/openid-connect/auth
           tokenUrl: http://localhost:8080/auth/realms/home/protocol/openid-connect/token
+          scope: openid profile email
           # User URL is not used when signature key is set
           # userUrl: http://localhost:8080/auth/realms/home/protocol/openid-connect/userinfo
           logoutUrl: http://localhost:8080/auth/realms/home/protocol/openid-connect/logout
           signKey: b64:anVzdC1hLXRlc3Q=
           sigAlgo: RS512
+          # existingSecret:
+          #   name: "my-existing-secret"
+          #   clientIdKey: clientId
+          #   clientSecretKey: clientSecret
+          #   signKeyKey: signKey
         # The collective of the user is given in the access token as property `docspell_collective`
         collectiveKey: "lookup:docspell_collective"
         # The username to use for the docspell account
@@ -104,8 +115,6 @@ docspell:
     ## @param docspell.server.integrationEndpoint.sourceName The name used for the item "source" property when uploaded through this endpoint
     ## @param docspell.server.integrationEndpoint.allowedIps.enabled Enable ip-allow-access-list
     ## @param docspell.server.integrationEndpoint.allowedIps.ips List of ips which should be added to the access list
-    ## @param docspell.server.integrationEndpoint.httpBasic.enabled Whether integration endpoint requests are expected to use http basic auth when uploading files
-    ## @param doscpell.server.integrationEndpoint.httpHeader.enabled Whether integration endpoint requests are expected to supply some specific header when uploading files
     integrationEndpoint:
       enabled: true
       priority: low
@@ -115,18 +124,46 @@ docspell:
         ips:
           # IP addresses may be specific as simple globs: a part marked as '*' matches any octet, like in `192.168.*.*`
           - 127.0.0.1
+      ## @param docspell.server.integrationEndpoint.httpBasic.enabled Whether integration endpoint requests are expected to use http basic auth when uploading files
+      ## @param docspell.server.integrationEndpoint.httpBasic.credentials.user The username for httpBasic authentication
+      ## @param docspell.server.integrationEndpoint.httpBasic.credentials.password The password for the httpBasic authentication
+      ## @param docspell.server.integrationEndpoint.httpBasic.existingSecret.name Name of an existing Kubernetes secret that contains the httpBasic credentials
+      ## @param docspell.server.integrationEndpoint.httpBasic.existingSecret.usernameKey The key inside the existing Kubernetes secret that contains the username for httpBasic
+      ## @param docspell.server.integrationEndpoint.httpBasic.existingSecret.passwordKey The key inside the existing Kubernetes secret that contains the password for httpBasic
       httpBasic:
         enabled: false
         realm: "Docspell Integration"
-        user: "docspell-int"
-        password: "docspell-int"
+        credentials:
+          # username: "docspell-int"
+          # password: "docspell-int"
+        # existingSecret:
+        #   name: "http-basic-secret-name"
+        #   usernameKey: "username-key-inside-secret"
+        #   passwordKey: "password-key-inside-secret"
+      ## @param doscpell.server.integrationEndpoint.httpHeader.enabled Whether integration endpoint requests are expected to supply some specific header when uploading files
+      ## @param docpsell.server.integrationEndpoint.httpHeader.headerName The name of the header that has to be included in the integration endpoint request
+      ## @param docspell.server.integrationEndpoint.httpHeader.headerValue.value The header value that is expected to be included in the integration endpoint request
+      ## @param docspell.server.integrationEndpojnt.httpHeader.headerValue.existingSecret.name The name of an existing Kubernetes secret that contains the value expected to be included in the integration endpoint request
+      ## @param docspell.server.integrationEndpojnt.httpHeader.headerValue.existingSecret.key The key inside of an existing Kubernetes secret that contains the value expected to be included in the integration endpoint 
       httpHeader:
-        enabled: true
+        enabled: false
         headerName: "Docspell-Integration"
-        headerValue: "SomeSecret"
-    ## @param docspell.server.adminEndpoint.secret Special administration endpoint. If a secret isn't supplied, the endpont is disabled
+        headerValue: 
+          # value: "SomeSecret"
+          # existingSecret:
+          #   name: "my-existing-secret"
+          #   key: "header-value-key-inside-secret"
+    ## @param docspell.server.adminEndpoint.enabled Whether to enable the special administration endpoint. A secret value or existing secret containing the value has to be supplied when enabled
+    ## @param docspell.server.adminEndpoint.secret.value Value for the administration endpoint
+    ## @param docspell.server.adminEndpoint.existingSecret.name The name of an existing Kubernetes secret that contains the value for the admin endpoint 
+    ## @param docspell.server.adminEndpoint.existingSecret.key The key inside of an existing Kubernetes secret that contains the value for the admin endpoint
     adminEndpoint:
-      secret: 
+      enabled: false
+      # secret:
+      #   value: "test"
+      # existingSecret:
+      #   name: "my-existing-secret"
+      #   key: "admin-key-inside-secret"
   
     ## @param docspell.server.backend.mailDebug Enable or disabling debugging for e-mail related functionality
     backend:
@@ -139,11 +176,17 @@ docspell:
         runFixupMigrations: true
         repairSchema: false
       ## @param docspell.server.backend.signup.mode The mode defines if new users can signup or not (open, invite, closed)
-      ## @param docspell.server.backend.signup.newInvitePassword If mode is 'invite', a password must be provided to generate invitation keys
+      ## @param docspell.server.backend.signup.newInvitePassword.value If mode is 'invite', a password must be provided to generate invitation keys
+      ## @param docspell.server.backend.signup.newInvitePassword.existingSecret.name The name of an existing Kubernetes secret that contains the invitation generation password
+      ## @param docspell.server.backend.signup.newINvitePassword.existingSecret.key The key inside of an existing Kubernetes secret that contains the invitation generation password
       ## @param docspell.server.backend.signup.inviteTime If mode is 'invite', this is the period an invitation token is considered valid
       signup:
         mode: open
-        newInvitePassword: 
+        newInvitePassword:
+          # value: asdf
+          # existingSecret:
+          #   name: "my-existing-secret"
+          #   key: "invite-password-key"
         inviteTime: "3 days"
   ## @param docspell.joex.appId Id of the node
   ## @param docspell.joex.mailDebug Enable or disabling debugging for e-mail related functionality  
@@ -295,9 +338,6 @@ ingress:
   # - secretName: chart-exmaple-tls
   #   hosts:
   #     - docspell.example.com
-  # Mostly for argocd or any other CI that uses `helm template | kubectl apply` or similar
-  # If helm doesn't correctly detect your ingress API version you can set it here.
-  # apiVersion: networking.k8s.io/v1
 
 ## @section ServiceAccount
 #
@@ -542,6 +582,9 @@ solr:
 ## @param postgresql.global.postgresql.auth.password Password for the `dbname` user (overrides `auth.password`)
 ## @param postgresql.global.postgresql.auth.database Name for a custom database to create (overrides `auth.database`)
 ## @param postgresql.global.postgresql.auth.username Name for a custom user to create (overrides `auth.username`)
+## @param postgresql.global.postgresql.auth.existingSecret Name of an existing Kubernetes secret that contains the postgresql credentials. `auth.password` will be ignored and picked up from this secret
+## @param postgresql.global.postgresql.auth.secretKeys.adminPasswordKey Name of key in existing secret to use for PostgreSQL credentials.
+## @param postgresql.global.postgresql.auth.secretKeys.userPasswordKey Name of key in existing secret to use for PostgreSQL credentials.
 ## @param postgresql.global.postgresql.service.ports.postgresql PostgreSQL service port (overrides `service.ports.postgresql`)
 ## @param postgresql.primary.persistence.size PVC Storage Request for PostgreSQL volume
 postgresql:
@@ -552,6 +595,10 @@ postgresql:
      database: dbname
      username: dbuser
      password: dbpass
+    #  existingSecret: postgres-secret
+    #  secretKeys:
+    #    adminPasswordKey: postgres-password
+    #    userPasswordKey: password
     service:
      postgresql: 5432
   primary:

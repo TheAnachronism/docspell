@@ -27,6 +27,7 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/joex/config.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/joex/secret.yaml") . | sha256sum }}
         {{- with .Values.joex.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -51,6 +52,8 @@ spec:
           ports:
           - containerPort: {{ .Values.joex.service.port }}
             name: http
+          env:
+          {{- include "docspell.joex.secrets.existingSecrets" . | nindent 10 }}
           envFrom:
           - configMapRef:
               name: {{ include "docspell.fullname" . }}-joex
