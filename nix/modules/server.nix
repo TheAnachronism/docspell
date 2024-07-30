@@ -1,16 +1,17 @@
-overlay: { config, lib, pkgs, ... }:
-
-with lib;
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
   cfg = config.services.docspell-restserver;
   # Extract the config without the extraConfig attribute. It will be merged later
   declared_config = attrsets.filterAttrs (n: v: n != "extraConfig") cfg;
-  user = if cfg.runAs == null then "docspell" else cfg.runAs;
-  configFile = pkgs.writeText "docspell-server.conf" ''
-    {"docspell": {"server":
-      ${builtins.toJSON (lib.recursiveUpdate declared_config cfg.extraConfig)}
-    }}
-  '';
+  user =
+    if cfg.runAs == null
+    then "docspell"
+    else cfg.runAs;
   defaults = {
     app-name = "Docspell";
     app-id = "rest1";
@@ -44,7 +45,7 @@ let
       source-name = "integration";
       allowed-ips = {
         enabled = false;
-        ips = [ "127.0.0.1" ];
+        ips = ["127.0.0.1"];
       };
       http-basic = {
         enabled = false;
@@ -78,14 +79,15 @@ let
           user = "pguser";
           password = "";
         };
-        pg-config = { };
+        pg-config = {};
         pg-query-parser = "websearch_to_tsquery";
-        pg-rank-normalization = [ 4 ];
+        pg-rank-normalization = [4];
       };
     };
     auth = {
       server-secret = "hex:caffee";
       session-valid = "5 minutes";
+      on-account-source-conflict = "fail";
       remember-me = {
         enabled = true;
         valid = "30 days";
@@ -105,6 +107,7 @@ let
         scope = "profile";
         authorize-url = null;
         token-url = null;
+        logout-url = "";
         user-url = null;
         sign-key = "";
         sig-algo = "RS256";
@@ -126,19 +129,17 @@ let
       };
       files = {
         chunk-size = 524288;
-        valid-mime-types = [ ];
+        valid-mime-types = [];
       };
       addons = {
         enabled = false;
         allow-impure = true;
-        allowed-urls = [ "*" ];
-        denied-urls = [ ];
+        allowed-urls = ["*"];
+        denied-urls = [];
       };
     };
   };
-in
-{
-
+in {
   ## interface
   options = {
     services.docspell-restserver = {
@@ -146,6 +147,7 @@ in
         default = false;
         description = "Whether to enable docspell.";
       };
+      package = mkPackageOption pkgs "docspell-restserver" {};
       runAs = mkOption {
         type = types.nullOr types.str;
         default = null;
@@ -156,11 +158,19 @@ in
       };
       jvmArgs = mkOption {
         type = types.listOf types.str;
-        default = [ ];
-        example = [ "-J-Xmx1G" ];
+        default = [];
+        example = ["-J-Xmx1G"];
         description = "The options passed to the executable for setting jvm arguments.";
       };
-
+      configFile = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        example = literalExpression ''"''${config.sops.secrets.docspell_restserver_config.path}"'';
+        description = ''
+          Path to an existing configuration file.
+          If null, a configuration file will be generated at /etc/docspell-restserver.conf
+        '';
+      };
 
       app-name = mkOption {
         type = types.str;
@@ -232,7 +242,7 @@ in
       };
 
       bind = mkOption {
-        type = types.submodule ({
+        type = types.submodule {
           options = {
             address = mkOption {
               type = types.str;
@@ -245,13 +255,13 @@ in
               description = "The port to bind the REST server";
             };
           };
-        });
+        };
         default = defaults.bind;
         description = "Address and port bind the rest server.";
       };
 
       server-options = mkOption {
-        type = types.submodule ({
+        type = types.submodule {
           options = {
             enable-http-2 = mkOption {
               type = types.bool;
@@ -269,13 +279,13 @@ in
               description = "Timeout when waiting for the response.";
             };
           };
-        });
+        };
         default = defaults.server-options;
         description = "Tuning the http server";
       };
 
       logging = mkOption {
-        type = types.submodule ({
+        type = types.submodule {
           options = {
             minimum-level = mkOption {
               type = types.str;
@@ -293,13 +303,13 @@ in
               description = "Set of logger and their levels";
             };
           };
-        });
+        };
         default = defaults.logging;
         description = "Settings for logging";
       };
 
       auth = mkOption {
-        type = types.submodule ({
+        type = types.submodule {
           options = {
             server-secret = mkOption {
               type = types.str;
@@ -319,8 +329,21 @@ in
                 will get a new one periodically.
               '';
             };
+            on-account-source-conflict = mkOption {
+              type = types.enum ["fail" "convert"];
+              default = defaults.auth.on-account-source-conflict;
+              description = ''
+                Accounts can be local or defined at a remote provider and
+                integrated via OIDC. If the same account is defined in both
+                sources, docspell by default fails if a user mixes logins (e.g.
+                when registering a user locally and then logging in with the
+                same user via OIDC). When set to `convert` docspell treats it as
+                being the same and simply updates the account to reflect the new
+                account source.
+              '';
+            };
             remember-me = mkOption {
-              type = types.submodule ({
+              type = types.submodule {
                 options = {
                   enabled = mkOption {
                     type = types.bool;
@@ -333,18 +356,18 @@ in
                     description = "The time a remember-me token is valid.";
                   };
                 };
-              });
+              };
               default = defaults.auth.remember-me;
               description = "Settings for Remember-Me";
             };
           };
-        });
+        };
         default = defaults.auth;
         description = "Authentication";
       };
 
       download-all = mkOption {
-        type = types.submodule ({
+        type = types.submodule {
           options = {
             max-files = mkOption {
               type = types.int;
@@ -357,7 +380,7 @@ in
               description = "The maximum (uncompressed) size of the zip file contents.";
             };
           };
-        });
+        };
         default = defaults.download-all;
         description = "";
       };
@@ -387,7 +410,7 @@ in
               description = "How to retrieve the collective name.";
             };
             provider = mkOption {
-              type = (types.submodule {
+              type = types.submodule {
                 options = {
                   provider-id = mkOption {
                     type = types.str;
@@ -420,6 +443,11 @@ in
                     default = defaults.openid.provider.token-url;
                     description = "The URL used to retrieve the token.";
                   };
+                  logout-url = mkOption {
+                    type = types.str;
+                    default = defaults.openid.provider.logout-url;
+                    description = "The URL used for user's logout.";
+                  };
                   user-url = mkOption {
                     type = types.nullOr types.str;
                     default = defaults.openid.provider.user-url;
@@ -436,18 +464,18 @@ in
                     description = "The expected algorithm used to sign the token.";
                   };
                 };
-              });
+              };
               default = defaults.openid.provider;
               description = "The config for an OpenID Connect provider.";
             };
           };
         });
-        default = [ ];
+        default = [];
         description = "A list of OIDC provider configurations.";
       };
 
       integration-endpoint = mkOption {
-        type = types.submodule ({
+        type = types.submodule {
           options = {
             enabled = mkOption {
               type = types.bool;
@@ -467,7 +495,7 @@ in
               '';
             };
             allowed-ips = mkOption {
-              type = types.submodule ({
+              type = types.submodule {
                 options = {
                   enabled = mkOption {
                     type = types.bool;
@@ -480,7 +508,7 @@ in
                     description = "The ips/ip patterns to allow";
                   };
                 };
-              });
+              };
               default = defaults.integration-endpoint.allowed-ips;
               description = ''
                 IPv4 addresses to allow access. An empty list, if enabled,
@@ -491,7 +519,7 @@ in
               '';
             };
             http-basic = mkOption {
-              type = types.submodule ({
+              type = types.submodule {
                 options = {
                   enabled = mkOption {
                     type = types.bool;
@@ -514,14 +542,14 @@ in
                     description = "The password to check.";
                   };
                 };
-              });
+              };
               default = defaults.integration-endpoint.http-basic;
               description = ''
                 Requests are expected to use http basic auth when uploading files.
               '';
             };
             http-header = mkOption {
-              type = types.submodule ({
+              type = types.submodule {
                 options = {
                   enabled = mkOption {
                     type = types.bool;
@@ -539,7 +567,7 @@ in
                     description = "The value of the header to check.";
                   };
                 };
-              });
+              };
               default = defaults.integration-endpoint.http-header;
               description = ''
                 Requests are expected to supply some specific header when
@@ -547,7 +575,7 @@ in
               '';
             };
           };
-        });
+        };
         default = defaults.integration-endpoint;
         description = ''
           This endpoint allows to upload files to any collective. The
@@ -566,7 +594,7 @@ in
       };
 
       admin-endpoint = mkOption {
-        type = types.submodule ({
+        type = types.submodule {
           options = {
             secret = mkOption {
               type = types.str;
@@ -574,13 +602,13 @@ in
               description = "The secret used to call admin endpoints.";
             };
           };
-        });
+        };
         default = defaults.admin-endpoint;
         description = "An endpoint for administration tasks.";
       };
 
       full-text-search = mkOption {
-        type = types.submodule ({
+        type = types.submodule {
           options = {
             enabled = mkOption {
               type = types.bool;
@@ -597,7 +625,7 @@ in
               description = "The backend to use, either solr or postgresql";
             };
             solr = mkOption {
-              type = types.submodule ({
+              type = types.submodule {
                 options = {
                   url = mkOption {
                     type = types.str;
@@ -629,13 +657,13 @@ in
                     description = "The default combiner for tokens. One of {AND, OR}.";
                   };
                 };
-              });
+              };
               default = defaults.full-text-search.solr;
               description = "Configuration for the SOLR backend.";
             };
 
             postgresql = mkOption {
-              type = types.submodule ({
+              type = types.submodule {
                 options = {
                   use-default-connection = mkOption {
                     type = types.bool;
@@ -643,7 +671,7 @@ in
                     description = "Whether to use the primary db connection.";
                   };
                   jdbc = mkOption {
-                    type = types.submodule ({
+                    type = types.submodule {
                       options = {
                         url = mkOption {
                           type = types.str;
@@ -663,7 +691,7 @@ in
                           description = "The password to connect to the database.";
                         };
                       };
-                    });
+                    };
                     default = defaults.full-text-search.postgresql.jdbc;
                     description = "Database connection settings";
                   };
@@ -683,18 +711,18 @@ in
                     description = "";
                   };
                 };
-              });
+              };
               default = defaults.full-text-search.postgresql;
               description = "PostgreSQL for fulltext search";
             };
           };
-        });
+        };
         default = defaults.full-text-search;
         description = "Configuration for full-text search.";
       };
 
       backend = mkOption {
-        type = types.submodule ({
+        type = types.submodule {
           options = {
             mail-debug = mkOption {
               type = types.bool;
@@ -707,7 +735,7 @@ in
               '';
             };
             jdbc = mkOption {
-              type = types.submodule ({
+              type = types.submodule {
                 options = {
                   url = mkOption {
                     type = types.str;
@@ -734,12 +762,12 @@ in
                     description = "The password to connect to the database.";
                   };
                 };
-              });
+              };
               default = defaults.backend.jdbc;
               description = "Database connection settings";
             };
             signup = mkOption {
-              type = types.submodule ({
+              type = types.submodule {
                 options = {
                   mode = mkOption {
                     type = types.str;
@@ -772,12 +800,12 @@ in
                     '';
                   };
                 };
-              });
+              };
               default = defaults.backend.signup;
               description = "Registration settings";
             };
             files = mkOption {
-              type = types.submodule ({
+              type = types.submodule {
                 options = {
                   chunk-size = mkOption {
                     type = types.int;
@@ -804,12 +832,12 @@ in
                     '';
                   };
                 };
-              });
+              };
               default = defaults.backend.files;
               description = "Settings for how files are stored.";
             };
             addons = mkOption {
-              type = types.submodule ({
+              type = types.submodule {
                 options = {
                   enabled = mkOption {
                     type = types.bool;
@@ -832,19 +860,19 @@ in
                     description = "Url patterns to deny to install";
                   };
                 };
-              });
+              };
               default = defaults.backend.addons;
               description = "Addon config";
             };
           };
-        });
+        };
         default = defaults.backend;
         description = "Configuration for the backend";
       };
       extraConfig = mkOption {
         type = types.attrs;
         description = "Extra configuration for docspell server. Overwrites values in case of a conflict.";
-        default = { };
+        default = {};
         example = ''
           {
             files = {
@@ -863,8 +891,6 @@ in
 
   ## implementation
   config = mkIf config.services.docspell-restserver.enable {
-
-    nixpkgs.overlays = [ overlay ];
     users.users."${user}" = mkIf (cfg.runAs == null) {
       name = user;
       isSystemUser = true;
@@ -873,24 +899,34 @@ in
       description = "Docspell user";
       group = user;
     };
-    users.groups."${user}" = mkIf (cfg.runAs == null) { };
+    users.groups."${user}" = mkIf (cfg.runAs == null) {};
 
+    environment.etc."docspell-restserver.conf" = mkIf (cfg.configFile == null) {
+      text = ''
+        {"docspell": {"server":
+          ${builtins.toJSON (lib.recursiveUpdate declared_config cfg.extraConfig)}
+        }}
+      '';
+      user = user;
+      group = user;
+      mode = "0400";
+    };
 
-    systemd.services.docspell-restserver =
-      let
-        args = builtins.concatStringsSep " " cfg.jvmArgs;
-        cmd = "${pkgs.docspell-server}/bin/docspell-restserver ${args} -- ${configFile}";
-      in
-      {
-        description = "Docspell Rest Server";
-        after = [ "networking.target" ];
-        wantedBy = [ "multi-user.target" ];
-        path = [ pkgs.gawk ];
-        preStart = ''
+    systemd.services.docspell-restserver = let
+      args = builtins.concatStringsSep " " cfg.jvmArgs;
+      configFile = if cfg.configFile == null
+        then "/etc/docspell-restserver.conf"
+        else "${cfg.configFile}";
+      cmd = "${lib.getExe' cfg.package "docspell-restserver"} ${args} -- ${configFile}";
+    in {
+      description = "Docspell Rest Server";
+      after = ["networking.target"];
+      wantedBy = ["multi-user.target"];
+      path = [pkgs.gawk];
+      preStart = ''
       '';
 
-        script =
-          "${pkgs.su}/bin/su -s ${pkgs.bash}/bin/sh ${user} -c \"${cmd}\"";
-      };
+      script = "${pkgs.su}/bin/su -s ${pkgs.bash}/bin/sh ${user} -c \"${cmd}\"";
+    };
   };
 }

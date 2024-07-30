@@ -20,11 +20,14 @@ highlight_themes_css = [
 ]
 
 [link_checker]
+external_level = "warn"
 skip_prefixes = [
   "http://localhost",
   "https://docs.github.com", # doesn't allow checking anymore
   "/openapi",
-  "https://www.abisource.com" # has bad ssl config
+  "https://www.abisource.com", # has bad ssl config
+  "https://chromewebstore.google.com", # too many redirects reported
+  "https://stackoverflow.com/" # forbidden
 ]
 skip_anchor_prefixes = [
   "https://github.com",

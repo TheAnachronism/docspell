@@ -26,7 +26,7 @@ trait StoreFixture extends CatsEffectFunFixtures { self: CatsEffectSuite =>
   def schemaMigrateConfig =
     StoreFixture.schemaMigrateConfig
 
-  val xa = ResourceFixture {
+  val xa = ResourceFunFixture {
     val cfg = StoreFixture.memoryDB("test")
     for {
       ds <- StoreFixture.dataSource(cfg)
@@ -35,7 +35,7 @@ trait StoreFixture extends CatsEffectFunFixtures { self: CatsEffectSuite =>
     } yield xa
   }
 
-  val store = ResourceFixture {
+  val store = ResourceFunFixture {
     val cfg = StoreFixture.memoryDB("test")
     for {
       store <- StoreFixture.store(cfg)
@@ -106,7 +106,7 @@ object StoreFixture {
     for {
       xa <- makeXA(ds)
       cfg = FileRepositoryConfig.Database(64 * 1024)
-      fr = FileRepository[IO](xa, ds, cfg, true)
+      fr = FileRepository[IO](xa, ds, cfg, withAttributeStore = true)
       store = new StoreImpl[IO](fr, jdbc, schemaMigrateConfig, ds, xa)
       _ <- Resource.eval(store.migrate)
     } yield store

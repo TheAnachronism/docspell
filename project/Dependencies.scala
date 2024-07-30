@@ -8,49 +8,49 @@ object Dependencies {
   val BcryptVersion = "0.4"
   val BetterMonadicForVersion = "0.3.1"
   val BinnyVersion = "0.11.0"
-  val CalevVersion = "0.7.0"
+  val CalevVersion = "0.7.3"
   val CatsVersion = "2.10.0"
-  val CatsEffectVersion = "3.5.3"
+  val CatsEffectVersion = "3.5.4"
   val CatsParseVersion = "1.0.0"
   val CirceVersion = "0.15.0-M1"
   val CirceGenericExtrasVersion = "0.14.3"
-  val CirceYamlVersion = "0.15.1"
+  val CirceYamlVersion = "0.15.3"
   val ClipboardJsVersion = "2.0.11"
   val DoobieVersion = "1.0.0-RC5"
   val EmilVersion = "0.17.0"
   val FlexmarkVersion = "0.64.8"
-  val FlywayVersion = "10.8.1"
-  val Fs2Version = "3.9.4"
+  val FlywayVersion = "10.13.0"
+  val Fs2Version = "3.10.2"
   val H2Version = "2.2.224"
-  val Http4sVersion = "0.23.25"
-  val Icu4jVersion = "74.2"
+  val Http4sVersion = "0.23.27"
+  val Icu4jVersion = "75.1"
   val JavaOtpVersion = "0.4.0"
-  val JsoupVersion = "1.17.2"
-  val JwtScalaVersion = "10.0.0"
+  val JsoupVersion = "1.18.1"
+  val JwtScalaVersion = "10.0.1"
   val KindProjectorVersion = "0.10.3"
-  val KittensVersion = "3.2.0"
+  val KittensVersion = "3.3.0"
   val LevigoJbig2Version = "2.0"
   val Log4sVersion = "1.10.0"
   val LogbackVersion = "1.2.10"
-  val MariaDbVersion = "3.3.2"
-  val MUnitVersion = "0.7.29"
-  val MUnitCatsEffectVersion = "1.0.7"
-  val PdfboxVersion = "3.0.1"
+  val MariaDbVersion = "3.4.1"
+  val MUnitVersion = "1.0.0"
+  val MUnitCatsEffectVersion = "2.0.0"
+  val PdfboxVersion = "3.0.2"
   val PdfjsViewerVersion = "2.12.313"
   val PoiVersion = "4.1.2"
-  val PostgresVersion = "42.7.1"
-  val PureConfigVersion = "0.17.5"
-  val ScalaJavaTimeVersion = "2.5.0"
-  val ScodecBitsVersion = "1.1.38"
-  val ScribeVersion = "3.13.0"
-  val Slf4jVersion = "2.0.12"
-  val SourcecodeVersion = "0.3.1"
-  val StanfordNlpVersion = "4.5.6"
-  val TikaVersion = "2.9.1"
+  val PostgresVersion = "42.7.3"
+  val PureConfigVersion = "0.17.7"
+  val ScalaJavaTimeVersion = "2.6.0"
+  val ScodecBitsVersion = "1.2.0"
+  val ScribeVersion = "3.15.0"
+  val Slf4jVersion = "2.0.13"
+  val SourcecodeVersion = "0.4.2"
+  val StanfordNlpVersion = "4.5.7"
+  val TikaVersion = "2.9.2"
   val YamuscaVersion = "0.10.0"
-  val SwaggerUIVersion = "5.10.3"
-  val TestContainerVersion = "0.40.14"
-  val TwelveMonkeysVersion = "3.10.1"
+  val SwaggerUIVersion = "5.17.14"
+  val TestContainerVersion = "0.41.4"
+  val TwelveMonkeysVersion = "3.11.0"
   val JQueryVersion = "3.5.1"
 
   val scribe = Seq(
@@ -219,7 +219,7 @@ object Dependencies {
     "org.apache.tika" % "tika-core" % TikaVersion
   )
   val commonsIO = Seq(
-    "commons-io" % "commons-io" % "2.15.1"
+    "commons-io" % "commons-io" % "2.16.1"
   )
   val tikaParser = Seq(
     "org.apache.tika" % "tika-parsers" % TikaVersion
@@ -326,7 +326,7 @@ object Dependencies {
   val munit = Seq(
     "org.scalameta" %% "munit" % MUnitVersion,
     "org.scalameta" %% "munit-scalacheck" % MUnitVersion,
-    "org.typelevel" %% "munit-cats-effect-3" % MUnitCatsEffectVersion
+    "org.typelevel" %% "munit-cats-effect" % MUnitCatsEffectVersion
   )
 
   val kindProjectorPlugin = "org.typelevel" %% "kind-projector" % KindProjectorVersion

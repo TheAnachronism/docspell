@@ -31,6 +31,9 @@ trait Fixtures extends TestLoggingConfig { self: CatsEffectSuite =>
   val miniAddonUrl =
     LenientUri.fromJava(getClass.getResource("/minimal-addon.zip"))
 
+  val singleFileAddonUrl =
+    LenientUri.fromJava(getClass.getResource("/docspell-addon-single-file.zip"))
+
   val dummyAddonMeta =
     AddonMeta(
       meta =
@@ -40,13 +43,13 @@ trait Fixtures extends TestLoggingConfig { self: CatsEffectSuite =>
       ),
       None,
       runner = Runner(
-        nix = NixRunner(true).some,
+        nix = NixRunner(enable = true).some,
         docker = DockerRunner(
           enable = true,
           image = None,
           build = "Dockerfile".some
         ).some,
-        trivial = TrivialRunner(true, "src/addon.sh").some
+        trivial = TrivialRunner(enable = true, "src/addon.sh").some
       ).some,
       options = Options(networking = true, collectOutput = true).some
     )
@@ -55,7 +58,7 @@ trait Fixtures extends TestLoggingConfig { self: CatsEffectSuite =>
     Path(s"/tmp/target/test-temp")
 
   val tempDir =
-    ResourceFixture[Path](
+    ResourceFunFixture[Path](
       Resource.eval(Files[IO].createDirectories(baseTempDir)) *>
         Files[IO]
           .tempDirectory(baseTempDir.some, "run-", PosixPermissions.fromOctal("777"))
@@ -65,7 +68,7 @@ trait Fixtures extends TestLoggingConfig { self: CatsEffectSuite =>
       runner: RunnerType,
       runners: RunnerType*
   ): AddonExecutorConfig = {
-    val nspawn = NSpawn(false, "sudo", "systemd-nspawn", Duration.millis(100))
+    val nspawn = NSpawn(enabled = false, "sudo", "systemd-nspawn", Duration.millis(100))
     AddonExecutorConfig(
       runner = runner :: runners.toList,
       runTimeout = Duration.minutes(2),
